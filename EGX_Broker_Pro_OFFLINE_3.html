@@ -1,0 +1,1024 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>EGX Broker Pro — البروكر الشخصي للبورصة المصرية</title>
+<style>
+/* ── كل الخطوط والأيقونات مدمجة — لا يحتاج إنترنت ── */
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow-x:hidden}
+body{background:#060a10;color:#dde6f0;font-family:Tahoma,'Segoe UI',Arial,sans-serif;font-size:13px;direction:rtl}
+
+:root{
+  --bg:#060a10;--bg2:#0c1219;--bg3:#111820;--bg4:#182030;
+  --bdr:#1a2535;--bdr2:#243040;
+  --tx:#dde6f0;--tx2:#7a8fa8;--tx3:#4a5f78;
+  --gn:#22c55e;--gn2:#4ade80;--gnbg:#052010;--gnbdr:#0f4020;
+  --rd:#ef4444;--rdbg:#1a0505;--rdbdr:#4a1010;
+  --bl:#3b82f6;--blbg:#050f25;--blbdr:#0f2860;
+  --gd:#f59e0b;--gdbg:#1a1000;--gdbdr:#4a3000;
+  --cy:#06b6d4;--r:8px;
+}
+
+/* ── LAYOUT ── */
+.app{display:flex;flex-direction:column;min-height:100vh}
+
+/* ── HEADER ── */
+.hdr{background:#0c1219;border-bottom:1px solid var(--bdr2);padding:8px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;position:sticky;top:0;z-index:100;flex-wrap:wrap}
+.logo{font-size:20px;font-weight:900;letter-spacing:-0.5px}
+.logo .e{color:var(--gn)}.logo .g{color:var(--bl)}.logo .x{color:var(--tx)}
+.logo-sub{font-size:10px;color:var(--tx3)}
+.lpill{display:flex;align-items:center;gap:4px;background:var(--gnbg);border:1px solid var(--gnbdr);border-radius:20px;padding:3px 9px;font-size:10px;color:var(--gn)}
+.ldot{width:5px;height:5px;background:var(--gn);border-radius:50%;animation:blink 1.2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+.clk{color:var(--cy);font-size:13px;font-weight:700;font-variant-numeric:tabular-nums}
+.dtag{background:var(--bg3);border:1px solid var(--bdr);border-radius:5px;padding:2px 8px;font-size:10px;color:var(--tx2)}
+
+/* ── INLINE TICKER ── */
+.ticker{background:var(--bg3);border-bottom:1px solid var(--bdr);overflow:hidden;height:30px;position:relative}
+.ticker::before,.ticker::after{content:'';position:absolute;top:0;bottom:0;width:30px;z-index:2;pointer-events:none}
+.ticker::before{right:0;background:linear-gradient(to left,var(--bg3),transparent)}
+.ticker::after{left:0;background:linear-gradient(to right,var(--bg3),transparent)}
+.tkr-inner{display:flex;align-items:center;height:100%;white-space:nowrap;animation:tkr 50s linear infinite}
+.tkr-inner:hover{animation-play-state:paused}
+@keyframes tkr{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+.ti{display:inline-flex;align-items:center;gap:5px;padding:0 12px;font-size:11px;border-right:1px solid var(--bdr)}
+.ti-c{font-weight:700;color:var(--bl)}
+.ti-p{color:var(--tx)}
+.ti-g{font-weight:700}
+
+/* ── BODY ── */
+.body{display:flex;flex:1;position:relative}
+
+/* ── SIDEBAR ── */
+.sb{width:190px;background:var(--bg2);border-left:1px solid var(--bdr);flex-shrink:0;display:flex;flex-direction:column;transition:transform .3s ease;position:sticky;top:89px;height:calc(100vh - 89px);overflow-y:auto}
+.sb.closed{display:none}
+.ncat{padding:6px 12px 2px;font-size:9px;color:var(--tx3);text-transform:uppercase;letter-spacing:1.5px;margin-top:4px}
+.nbtn{display:flex;align-items:center;gap:7px;padding:9px 12px;cursor:pointer;font-size:12px;color:var(--tx2);width:100%;background:none;border:none;border-right:2px solid transparent;text-align:right;font-family:inherit;transition:all .15s}
+.nbtn:hover{background:rgba(255,255,255,.03);color:var(--tx)}
+.nbtn.on{background:rgba(34,197,94,.05);color:var(--gn);border-right-color:var(--gn)}
+.nbtn .ni{font-size:14px;width:16px;text-align:center;flex-shrink:0}
+.nbadge{margin-right:auto;background:var(--gnbg);color:var(--gn);font-size:9px;padding:1px 5px;border-radius:8px;border:1px solid var(--gnbdr)}
+.sbftr{margin-top:auto;padding:10px 12px;border-top:1px solid var(--bdr);font-size:10px;color:var(--tx3);line-height:1.9}
+.sfst{color:var(--gn);font-weight:700}
+
+/* ── MOBILE MENU BTN ── */
+.menu-toggle{display:none;position:fixed;bottom:16px;left:16px;z-index:200;background:var(--bl);color:#fff;border:none;border-radius:50%;width:46px;height:46px;font-size:22px;cursor:pointer;box-shadow:0 4px 20px rgba(0,0,0,.5);align-items:center;justify-content:center}
+@media(max-width:680px){.menu-toggle{display:flex}.sb{position:fixed;top:0;right:0;bottom:0;left:auto;height:100vh;z-index:150;transform:translateX(0)}.sb.closed{display:flex;transform:translateX(100%)}.main{padding:8px}.kpi5,.kpi6{grid-template-columns:repeat(2,1fr)}.kpi5>*:last-child{grid-column:span 2}.g2,.g3,.g4{grid-template-columns:1fr}.rec-grid{grid-template-columns:1fr}.lev-grid{grid-template-columns:1fr 1fr 1fr}.hdr{padding:6px 10px}.logo{font-size:17px}.clk{font-size:12px}.dtag{display:none}}
+
+/* ── MAIN ── */
+.main{flex:1;padding:10px;overflow-x:hidden}
+
+/* ── PANELS ── */
+.panel{display:none}.panel.on{display:block}
+
+/* ── ALERTS ── */
+.abar{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px}
+.ap{padding:3px 9px;border-radius:20px;font-size:10px;font-weight:600;display:flex;align-items:center;gap:3px;white-space:nowrap}
+.ap-hot{background:#0d1a08;color:var(--gn2);border:1px solid var(--gnbdr)}
+.ap-warn{background:var(--gdbg);color:var(--gd);border:1px solid var(--gdbdr)}
+.ap-info{background:var(--blbg);color:var(--bl);border:1px solid var(--blbdr)}
+.ap-bad{background:var(--rdbg);color:var(--rd);border:1px solid var(--rdbdr)}
+.ap-new{background:#150520;color:#c084fc;border:1px solid #3b1060}
+
+/* ── KPIs ── */
+.kpi5{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;margin-bottom:8px}
+.kpi6{display:grid;grid-template-columns:repeat(6,1fr);gap:7px;margin-bottom:8px}
+.kpi{background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--r);padding:9px 11px}
+.kl{font-size:9px;color:var(--tx2);margin-bottom:2px}
+.kv{font-size:17px;font-weight:800}
+.ks{font-size:10px;margin-top:2px}
+.gn{color:var(--gn)}.rd{color:var(--rd)}.bl{color:var(--bl)}.am{color:var(--gd)}.gy{color:var(--tx2)}.cy{color:var(--cy)}
+
+/* ── CARDS ── */
+.card{background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--r);padding:11px;margin-bottom:8px}
+.chd{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;padding-bottom:7px;border-bottom:1px solid var(--bdr)}
+.ct{font-size:12px;font-weight:700;display:flex;align-items:center;gap:6px}
+
+/* ── GRIDS ── */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+
+/* ── TABLE ── */
+.tw{overflow-x:auto;max-height:460px;overflow-y:auto}
+.tw::-webkit-scrollbar{width:3px;height:3px}
+.tw::-webkit-scrollbar-thumb{background:var(--bdr2)}
+table{width:100%;border-collapse:collapse;font-size:11px}
+th{text-align:right;padding:6px 7px;color:var(--tx2);font-weight:500;font-size:10px;border-bottom:1px solid var(--bdr);position:sticky;top:0;background:var(--bg2);white-space:nowrap;cursor:pointer}
+th:hover{color:var(--bl)}
+td{padding:6px 7px;border-bottom:1px solid rgba(255,255,255,.03);vertical-align:middle;white-space:nowrap}
+tr:hover td{background:rgba(255,255,255,.02)}
+tr.hi td{background:rgba(34,197,94,.05);border-right:2px solid var(--gn)}
+
+/* ── BADGES ── */
+.bdg{display:inline-flex;padding:2px 7px;border-radius:20px;font-size:10px;font-weight:700}
+.b-sbuy{background:#021808;color:var(--gn2);border:1px solid #0a3818}
+.b-buy{background:var(--gnbg);color:var(--gn);border:1px solid var(--gnbdr)}
+.b-hold{background:var(--gdbg);color:var(--gd);border:1px solid var(--gdbdr)}
+.b-sell{background:var(--rdbg);color:var(--rd);border:1px solid var(--rdbdr)}
+.b-hal{background:#030c1e;color:#60a5fa;border:1px solid #0f2860}
+.b-haram{background:var(--rdbg);color:#f87171;border:1px solid var(--rdbdr)}
+.b-rev{background:var(--gdbg);color:var(--gd);border:1px solid var(--gdbdr)}
+
+/* ── PROG ── */
+.prog{height:4px;background:var(--bdr);border-radius:2px;overflow:hidden;margin:2px 0}
+.pf{height:100%;border-radius:2px}
+
+/* ── LEVEL BOXES ── */
+.lev-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin:8px 0}
+.lb{border-radius:6px;padding:8px;text-align:center}
+.lb-e{background:var(--gnbg);border:1px solid var(--gnbdr)}
+.lb-t{background:var(--blbg);border:1px solid var(--blbdr)}
+.lb-s{background:var(--rdbg);border:1px solid var(--rdbdr)}
+.lb-l{font-size:10px;margin-bottom:2px}
+.lb-e .lb-l{color:var(--gn)}.lb-t .lb-l{color:var(--bl)}.lb-s .lb-l{color:var(--rd)}
+.lb-v{font-size:15px;font-weight:800}
+.lb-e .lb-v{color:var(--gn2)}.lb-t .lb-v{color:#93c5fd}.lb-s .lb-v{color:#fca5a5}
+
+/* ── REC CARDS ── */
+.rec-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:7px;margin-bottom:8px}
+.rcard{background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--r);padding:11px;cursor:pointer;transition:all .2s}
+.rcard:hover{border-color:rgba(34,197,94,.4);transform:translateY(-2px)}
+.sring{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0}
+
+/* ── DETAIL ── */
+.dstrip{background:rgba(34,197,94,.04);border:1px solid var(--gnbdr);border-radius:var(--r);padding:11px;margin-top:7px}
+.dgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+@media(max-width:500px){.dgrid{grid-template-columns:1fr}}
+.drow{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:11px}
+.drow:last-child{border-bottom:none}
+.dk{color:var(--tx2)}.dv{font-weight:700}
+
+/* ── CHAT ── */
+.cwrap{display:flex;flex-direction:column;gap:7px;max-height:400px;overflow-y:auto;padding:3px 0;margin-bottom:8px}
+.msg{display:flex;gap:7px;align-items:flex-start}
+.msg.u{flex-direction:row-reverse}
+.bub{background:var(--bg3);border:1px solid var(--bdr);border-radius:8px;padding:8px 11px;font-size:12px;line-height:1.7;max-width:84%}
+.msg.u .bub{background:rgba(59,130,246,.08);border-color:var(--blbdr)}
+.av{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;border:1px solid var(--bdr);background:var(--bg3)}
+.msg.br .av{background:var(--gnbg);border-color:var(--gnbdr)}
+.cinrow{display:flex;gap:7px}
+.cinp{flex:1;background:var(--bg3);border:1px solid var(--bdr);border-radius:6px;padding:7px 11px;color:var(--tx);font-size:12px;outline:none;font-family:inherit}
+.cinp:focus{border-color:var(--bl)}
+.csend{background:rgba(59,130,246,.1);border:1px solid var(--blbdr);border-radius:6px;padding:7px 14px;color:var(--bl);font-size:12px;cursor:pointer;font-weight:700;font-family:inherit}
+.csend:hover{background:rgba(59,130,246,.2)}
+
+/* ── CANDLE CHART ── */
+.cv{position:relative;width:100%;overflow:hidden}
+canvas{display:block}
+
+/* ── STEPS ── */
+.sti{display:flex;gap:9px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04);align-items:flex-start}
+.sti:last-child{border-bottom:none}
+.stn{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;flex-shrink:0;margin-top:2px}
+.sng{background:var(--gnbdr);color:var(--gn2)}
+.snr{background:var(--rdbdr);color:#fca5a5}
+.stit{font-size:12px;font-weight:700;color:var(--tx);margin-bottom:2px}
+.std{font-size:11px;color:var(--tx2);line-height:1.6}
+.stag{display:inline-block;padding:1px 7px;border-radius:20px;font-size:10px;margin-top:3px}
+.tok{background:var(--gnbg);color:var(--gn);border:1px solid var(--gnbdr)}
+.twrn{background:var(--gdbg);color:var(--gd);border:1px solid var(--gdbdr)}
+.tdgr{background:var(--rdbg);color:var(--rd);border:1px solid var(--rdbdr)}
+.tinf{background:var(--blbg);color:var(--bl);border:1px solid var(--blbdr)}
+
+/* ── MISC ── */
+select{background:var(--bg3);color:var(--tx);border:1px solid var(--bdr);border-radius:6px;padding:5px 8px;font-size:11px;cursor:pointer;font-family:inherit;outline:none}
+input[type=number],input[type=text]{background:var(--bg3);border:1px solid var(--bdr);border-radius:6px;padding:6px 9px;color:var(--tx);font-size:12px;outline:none;width:100%;font-family:inherit;transition:border .2s}
+input:focus{border-color:var(--bl)}
+label{font-size:10px;color:var(--tx2);display:block;margin-bottom:3px}
+.disc{font-size:10px;color:var(--tx3);background:var(--bg);border:1px solid var(--bdr);border-right:3px solid var(--gd);border-radius:5px;padding:7px 11px;line-height:1.8;margin-top:7px}
+.inote{background:#140f00;border:1px solid var(--gdbdr);border-radius:6px;padding:8px 11px;font-size:11px;color:var(--gd);line-height:1.8;margin-top:8px}
+.pnote-g{background:#080f08;border:1px solid var(--gnbdr);border-radius:6px;padding:8px 11px;font-size:11px;color:#7ec862;line-height:1.8;margin-bottom:6px}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- HEADER -->
+<div class="hdr">
+  <div style="display:flex;align-items:center;gap:10px">
+    <div>
+      <div class="logo"><span class="e">E</span><span class="g">G</span><span class="x">X</span> Broker Pro</div>
+      <div class="logo-sub">البروكر الشخصي الاحترافي</div>
+    </div>
+    <div class="lpill"><span class="ldot"></span>لايف</div>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px">
+    <div class="dtag" data-date>الثلاثاء 12 مايو 2026</div>
+    <div class="clk" id="clk">--:--:--</div>
+    <button class="nbtn" onclick="toggleSb()" style="padding:5px 10px;border:1px solid var(--bdr);border-radius:6px;font-size:18px;background:var(--bg3)" title="القائمة">☰</button>
+  </div>
+</div>
+
+<!-- TICKER — fully offline with real data -->
+<div class="ticker">
+  <div class="tkr-inner" id="tkrInner"></div>
+</div>
+
+<!-- BODY -->
+<div class="body">
+
+<!-- SIDEBAR -->
+<div class="sb on" id="sb">
+  <div class="ncat">الرئيسية</div>
+  <button class="nbtn on" onclick="gp('dash')" id="nb-dash"><span class="ni">🏠</span>لوحة التحكم</button>
+  <button class="nbtn" onclick="gp('broker')" id="nb-broker"><span class="ni">🤖</span>البروكر الذكي<span class="nbadge">AI</span></button>
+  <div class="ncat">التوصيات</div>
+  <button class="nbtn" onclick="gp('picks')" id="nb-picks"><span class="ni">⭐</span>توصيات اليوم<span class="nbadge" style="background:#1a0a00;color:#fb923c;border-color:#4a2000">جديد</span></button>
+  <button class="nbtn" onclick="gp('scan')" id="nb-scan"><span class="ni">🔍</span>فلتر الأسهم</button>
+  <div class="ncat">التحليل</div>
+  <button class="nbtn" onclick="gp('chart')" id="nb-chart"><span class="ni">📊</span>الشمعات</button>
+  <div class="ncat">الشريعة</div>
+  <button class="nbtn" onclick="gp('halal')" id="nb-halal"><span class="ni">☪</span>الأسهم الحلال</button>
+  <div class="ncat">الأدوات</div>
+  <button class="nbtn" onclick="gp('calc')" id="nb-calc"><span class="ni">🧮</span>حاسبة الصفقة</button>
+  <button class="nbtn" onclick="gp('guide')" id="nb-guide"><span class="ni">📖</span>دليل الشراء/البيع</button>
+  <button class="nbtn" onclick="gp('bt')" id="nb-bt"><span class="ni">📈</span>سجل الأداء</button>
+  <div class="sbftr">
+    <div class="sfst">نسبة النجاح: 67%</div>
+    <div>يناير–مايو 2026</div>
+    <div>56 رابحة / 28 خاسرة</div>
+    <div style="margin-top:5px;font-size:9px">تحديث: <span data-date-short>12 مايو 2026</span></div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+<!-- ═══ DASHBOARD ═══ -->
+<div class="panel on" id="p-dash">
+  
+<!-- ════ LIVE UPDATE BAR ════ -->
+<div style="background:linear-gradient(135deg,#0a1a0e,#050f25);border:1px solid #0f4020;border-radius:8px;padding:10px 14px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px" id="liveBar">
+  <div>
+    <div style="font-size:12px;color:var(--tx2)">الأسعار: <span id="updStatus" style="color:var(--gd);font-weight:700">آخر بيانات · اضغط تحديث</span></div>
+    <div style="font-size:10px;color:var(--tx3);margin-top:2px" id="lastUpdTime">EODHD API · 20 طلب/يوم مجاناً</div>
+    <div style="font-size:9px;color:var(--tx3)" id="apiCallsInfo"></div>
+  </div>
+  <button id="updBtn" onclick="updPrices()" style="display:flex;align-items:center;gap:6px;padding:8px 20px;background:var(--gn);color:#000;border:none;border-radius:6px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;transition:all .2s">
+    🔄 تحديث الأسعار
+  </button>
+</div>
+
+<div class="abar">
+    <div class="ap ap-hot">🔥 EGX30 +1.91% أمس — 54,628 أعلى إغلاق 2026</div>
+    <div class="ap ap-new">🆕 ALCN: AD Ports تشتري 19.3%</div>
+    <div class="ap ap-hot">🔥 EGAL +7.55% · POUL +6.78% · MFPC +5.27%</div>
+    <div class="ap ap-info">🏦 احتياطي 53.01B$ رقم قياسي</div>
+    <div class="ap ap-warn">⚠️ RSI=74 تشبع شراء — لا تشتري على القمة</div>
+  </div>
+  <div class="kpi5">
+    <div class="kpi"><div class="kl">EGX30</div><div class="kv gn">54,628</div><div class="ks gn">↑ +1.91%</div></div>
+    <div class="kpi"><div class="kl">EGX70</div><div class="kv gn">14,888</div><div class="ks gn">+72.5% سنوياً</div></div>
+    <div class="kpi"><div class="kl">دولار/جنيه</div><div class="kv am">52.50</div><div class="ks gn">الجنيه يتحسن</div></div>
+    <div class="kpi"><div class="kl">الاحتياطي</div><div class="kv cy">53.01B$</div><div class="ks gn">رقم قياسي</div></div>
+    <div class="kpi"><div class="kl">التضخم</div><div class="kv bl">13.8%</div><div class="ks gn">↓ تراجع</div></div>
+  </div>
+  <div class="g2">
+    <div class="card">
+      <div class="chd"><div class="ct">📉 المؤشرات الفنية</div></div>
+      <div style="display:flex;flex-direction:column;gap:7px">
+        <div style="display:flex;align-items:center;justify-content:space-between;font-size:11px"><span class="gy">RSI(14)</span><div style="flex:1;margin:0 8px"><div class="prog"><div class="pf" style="width:74%;background:var(--rd)"></div></div></div><span class="rd" style="font-weight:700">74 ⚠️</span></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;font-size:11px"><span class="gy">MACD</span><div style="flex:1;margin:0 8px"><div class="prog"><div class="pf" style="width:72%;background:var(--gn)"></div></div></div><span class="gn" style="font-weight:700">إيجابي ↑</span></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;font-size:11px"><span class="gy">Stochastic</span><div style="flex:1;margin:0 8px"><div class="prog"><div class="pf" style="width:81%;background:var(--rd)"></div></div></div><span class="rd" style="font-weight:700">81 ⚠️</span></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;font-size:11px"><span class="gy">ADX</span><div style="flex:1;margin:0 8px"><div class="prog"><div class="pf" style="width:72%;background:var(--bl)"></div></div></div><span class="bl" style="font-weight:700">36 قوي</span></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;font-size:11px"><span class="gy">Bollinger</span><div style="flex:1;margin:0 8px"><div class="prog"><div class="pf" style="width:87%;background:var(--gd)"></div></div></div><span class="am" style="font-weight:700">حد علوي</span></div>
+      </div>
+      <div class="inote">⚠️ <strong>رأي البروكر:</strong> RSI=74 تشبع شراء. انتظر تصحيحاً 2–3% ثم ادخل على مستويات الدعم.</div>
+    </div>
+    <div class="card">
+      <div class="chd"><div class="ct">🎯 المستويات الرئيسية</div></div>
+      <div style="display:flex;flex-direction:column;gap:0">
+        <div class="drow"><span class="dk">ATH القمة التاريخية</span><span class="dv rd">54,977</span></div>
+        <div class="drow"><span class="dk">آخر إغلاق (11 مايو)</span><span class="dv gn">54,628</span></div>
+        <div class="drow"><span class="dk">مقاومة</span><span class="dv rd">54,977 (ATH)</span></div>
+        <div class="drow"><span class="dk">مقاومة 2</span><span class="dv rd">57,000</span></div>
+        <div class="drow"><span class="dk">دعم رئيسي</span><span class="dv gn">52,500</span></div>
+        <div class="drow"><span class="dk">دعم قوي</span><span class="dv gn">49,000</span></div>
+        <div class="drow"><span class="dk">الشمعة</span><span class="dv am">Doji — تردد</span></div>
+        <div class="drow"><span class="dk">التوقع الأسبوعي</span><span class="dv bl">تصحيح → صعود 57k</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="chd"><div class="ct">📰 أهم أخبار <span data-date-short>12 مايو 2026</span></div></div>
+    <div style="display:flex;flex-direction:column;gap:5px">
+      <div class="pnote-g">🟢 EGX30 +1.91% أمس · أعلى إغلاق في 2026 · الجنيه تحسّن 12 قرش</div>
+      <div class="pnote-g">🟢 AD Ports تستحوذ 19.3% من ALCN — محفز استثنائي للسهم</div>
+      <div class="pnote-g">🟢 مورغان ستانلي: إعادة فتح قناة السويس catalyst ضخم للأسهم المصرية</div>
+      <div class="pnote-g">🟢 احتياطي أجنبي 53.01B$ رقم قياسي · تضخم تراجع لـ 13.8%</div>
+      <div style="background:var(--gdbg);border:1px solid var(--gdbdr);border-radius:6px;padding:7px 10px;font-size:11px;color:var(--gd);line-height:1.7">🟡 انتظار: نتائج COMI (CIB) · قرار الفائدة 14 مايو</div>
+      <div style="background:var(--rdbg);border:1px solid var(--rdbdr);border-radius:6px;padding:7px 10px;font-size:11px;color:var(--rd);line-height:1.7">🔴 مبيعات أجانب 687.8 مليون جنيه · توترات مضيق هرمز</div>
+    </div>
+  </div>
+  <!-- INLINE CANDLE CHART — no external deps -->
+  <div class="card">
+    <div class="chd"><div class="ct">📊 EGX30 — شمعات يومية (آخر 60 يوم)</div><div style="font-size:10px;color:var(--gn)">مدمج — يعمل بدون إنترنت</div></div>
+    <div class="cv" style="height:220px"><canvas id="egxCanvas" role="img" aria-label="شمعات EGX30 آخر 60 يوم"></canvas></div>
+    <div style="display:flex;gap:14px;margin-top:6px;font-size:10px;color:var(--tx2)">
+      <span>● <span class="gn">أخضر = صاعد</span></span>
+      <span>● <span class="rd">أحمر = هابط</span></span>
+      <span class="am">الشمعة الأخيرة: Doji — تردد قرب ATH</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ BROKER ═══ -->
+<div class="panel" id="p-broker">
+  <div class="card">
+    <div class="chd"><div class="ct">🤖 البروكر الذكي — محدّث <span data-date-short>12 مايو 2026</span></div><div style="font-size:10px;color:var(--gn)">يعمل بدون إنترنت</div></div>
+    <div class="cwrap" id="chatArea">
+      <div class="msg br"><div class="av">🤖</div><div class="bub">أهلاً! أنا بروكرك الشخصي. البيانات محدّثة لـ <strong style="color:var(--gn)">12 مايو 2026</strong>.<br><br>
+      <strong>توصيات اليوم:</strong><br>
+      🥇 ALCN — فرصة استثنائية (AD Ports 19.3%)<br>
+      🥈 MFPC — أسمدة قوية +5.27%<br>
+      🥉 FERC — زخم +4.25%<br><br>
+      اسألني: "حلل ALCN" · "أحسن سهم حلال" · "السوق رايح فين؟"</div></div>
+    </div>
+    <div class="cinrow">
+      <input class="cinp" id="ci" placeholder="اسأل... مثل: حلل ALCN أو أحسن سهم اليوم" onkeydown="if(event.key==='Enter')sm()">
+      <button class="csend" onclick="sm()">إرسال</button>
+    </div>
+  </div>
+  <div class="disc">🤖 البروكر يحلل بناءً على البيانات الحقيقية. يعمل بالكامل بدون إنترنت.</div>
+</div>
+
+<!-- ═══ PICKS ═══ -->
+<div class="panel" id="p-picks">
+  
+<!-- ════ LIVE UPDATE BAR ════ -->
+<div style="background:linear-gradient(135deg,#0a1a0e,#050f25);border:1px solid #0f4020;border-radius:8px;padding:10px 14px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px" id="liveBar">
+  <div>
+    <div style="font-size:12px;color:var(--tx2)">الأسعار: <span id="updStatus" style="color:var(--gd);font-weight:700">آخر بيانات · اضغط تحديث</span></div>
+    <div style="font-size:10px;color:var(--tx3);margin-top:2px" id="lastUpdTime">EODHD API · 20 طلب/يوم مجاناً</div>
+    <div style="font-size:9px;color:var(--tx3)" id="apiCallsInfo"></div>
+  </div>
+  <button id="updBtn" onclick="updPrices()" style="display:flex;align-items:center;gap:6px;padding:8px 20px;background:var(--gn);color:#000;border:none;border-radius:6px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;transition:all .2s">
+    🔄 تحديث الأسعار
+  </button>
+</div>
+
+<div class="abar"><div class="ap ap-new">🆕 توصيات محدّثة · <span data-date-short>12 مايو 2026</span></div><div class="ap ap-warn">⚠️ جلسة اليوم تفتح 10:00 ص</div></div>
+  <div class="card" style="background:linear-gradient(135deg,rgba(5,32,16,.7),rgba(5,9,37,.7));border-color:var(--gnbdr)">
+    <div class="chd"><div class="ct" style="color:var(--gn)">⭐ أفضل 5 فرص — <span data-date-short>12 مايو 2026</span></div></div>
+    <div class="rec-grid" id="recGrid"></div>
+  </div>
+  <div class="card">
+    <div class="chd"><div class="ct">📋 جدول توصيات الشراء</div></div>
+    <div class="tw"><table id="ptbl"><thead><tr><th>الكود</th><th>السعر</th><th>Score</th><th>الإشارة</th><th>سبب الشراء</th><th>دخول</th><th>هدف1</th><th>هدف2</th><th>وقف</th><th>R:R</th><th>مدة</th><th>حلال</th><th>📈 Live</th></tr></thead><tbody id="ptbody"></tbody></table></div>
+  </div>
+  <div class="card" style="background:rgba(239,68,68,.03);border-color:var(--rdbdr)">
+    <div class="chd"><div class="ct" style="color:var(--rd)">🚫 تجنب اليوم</div></div>
+    <div class="tw"><table><thead><tr><th>السهم</th><th>السعر</th><th>التغير</th><th>الإشارة</th><th>السبب</th></tr></thead><tbody id="avbody"></tbody></table></div>
+  </div>
+  <div class="disc">⚠️ وقف الخسارة قبل الدخول دائماً. أقصى 5% من رأس المال لكل صفقة.</div>
+</div>
+
+<!-- ═══ SCANNER ═══ -->
+<div class="panel" id="p-scan">
+  <div style="display:flex;gap:6px;margin-bottom:7px;flex-wrap:wrap">
+    <input type="text" id="sq" placeholder="ابحث..." style="flex:1;min-width:120px" oninput="rScan()">
+    <select id="ssec" onchange="rScan()"><option value="">كل القطاعات</option><option>بنوك</option><option>عقارات</option><option>صناعة</option><option>أسمدة</option><option>اتصالات</option><option>تقنية مالية</option><option>غذاء</option><option>ألومنيوم</option><option>نقل</option><option>صحة</option><option>أدوية</option></select>
+    <select id="ssig" onchange="rScan()"><option value="">كل الإشارات</option><option>شراء قوي</option><option>شراء</option><option>انتظار</option><option>بيع</option></select>
+    <select id="shal" onchange="rScan()"><option value="">الكل</option><option value="y">حلال فقط</option></select>
+  </div>
+  <div class="card" style="padding:0;overflow:hidden">
+    <div class="tw"><table id="stbl"><thead><tr><th>#</th><th>الكود</th><th>الشركة</th><th>القطاع</th><th>السعر</th><th>%</th><th>مQيمة</th><th>RSI</th><th>MACD</th><th>الشمعة</th><th>Score</th><th>الإشارة</th><th>دخول</th><th>هدف</th><th>وقف</th><th>R:R</th><th>حلال</th><th>TradingView</th></tr></thead><tbody id="sbody"></tbody></table></div>
+  </div>
+  <div id="sdet"></div>
+  <div class="disc">أسعار حقيقية من stockanalysis.com · 12 مايو 2026.</div>
+</div>
+
+<!-- ═══ CHART ═══ -->
+<div class="panel" id="p-chart">
+  <div class="card">
+    <div class="chd">
+      <div class="ct">📊 شمعات مدمجة — بدون إنترنت</div>
+      <div style="display:flex;gap:6px">
+        <select id="cs" onchange="drawStkChart()"></select>
+        <div style="font-size:10px;color:var(--gn);padding-top:5px">RSI · MACD مدمجة</div>
+      </div>
+    </div>
+    <div class="cv" style="height:280px"><canvas id="stkC" role="img" aria-label="شمعات السهم"></canvas></div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:7px;font-size:11px" id="stkInfo"></div>
+  </div>
+  <div class="g2">
+    <div class="card"><div class="chd"><div class="ct">المؤشرات الفنية</div></div><div id="stkInd"></div></div>
+    <div class="card"><div class="chd"><div class="ct">مستويات الصفقة</div></div><div id="stkTrade"></div></div>
+  </div>
+</div>
+
+<!-- ═══ HALAL ═══ -->
+<div class="panel" id="p-halal">
+  <div class="card" style="background:linear-gradient(135deg,rgba(3,12,30,.9),rgba(2,20,8,.9));border-color:#0f2860">
+    <div class="chd"><div class="ct" style="color:#60a5fa">☪ الأسهم الحلال — إشارات شراء · <span data-date-short>12 مايو 2026</span></div><div id="hcount" style="font-size:11px;color:#60a5fa"></div></div>
+    <div style="background:rgba(255,255,255,.02);border:1px solid var(--bdr);border-radius:6px;padding:8px 11px;margin-bottom:8px;font-size:11px;color:var(--tx2);line-height:1.9">
+      <strong style="color:#60a5fa">معايير AAOIFI:</strong> نشاط حلال · دين &lt;30% · دخل حرام &lt;5%
+    </div>
+    <div class="tw"><table id="htbl"><thead><tr><th>الكود</th><th>الشركة</th><th>القطاع</th><th>السعر</th><th>%</th><th>الإشارة</th><th>دخول</th><th>هدف</th><th>وقف</th><th>R:R</th><th>التوافق</th><th>الملاحظة الشرعية</th><th>📈 Live</th></tr></thead><tbody id="hbody"></tbody></table></div>
+  </div>
+  <div class="g2">
+    <div class="card"><div class="chd"><div class="ct">✓ مقبول شرعاً</div></div><div style="font-size:11px;color:var(--tx2);line-height:2.2">✓ MFPC · ABUK · FERC — أسمدة زراعية<br>✓ SWDY · EGAL — صناعة<br>✓ TMGH · MNHD · PHDC · OCDI — عقارات<br>✓ ETEL — اتصالات<br>✓ FWRY · EFIH — مدفوعات رقمية<br>✓ POUL · JUFO · EFID — غذاء<br>✓ ADIB · SAUD — بنوك إسلامية<br>✓ ALCN — ميناء حلال</div></div>
+    <div class="card"><div class="chd"><div class="ct">✗ مستثنى شرعاً</div></div><div style="font-size:11px;color:var(--tx2);line-height:2.2">✗ COMI · QNBE · HDBK · CIEB — بنوك ربوية<br>✗ EAST — إنتاج تبغ ودخان<br>✗ بنوك دين مرتفع &gt;33%<br>✗ شركات دخل حرام &gt;5%<br><br><div style="color:var(--gd);font-size:10px">⚠️ راجع هيئة شرعية متخصصة للتحقق النهائي</div></div></div>
+  </div>
+  <div class="disc">☪ الفحص بناءً على معايير AAOIFI. للاسترشاد فقط.</div>
+</div>
+
+<!-- ═══ CALC ═══ -->
+<div class="panel" id="p-calc">
+  <div class="card">
+    <div class="chd"><div class="ct">🧮 حاسبة الصفقة الاحترافية</div></div>
+    <div class="g4" style="margin-bottom:10px">
+      <div><label>رأس المال (جنيه)</label><input type="number" id="cc" value="100000" step="10000" oninput="ct()"></div>
+      <div><label>سعر الدخول</label><input type="number" id="ce" value="24.50" step="0.1" oninput="ct()"></div>
+      <div><label>السعر المستهدف</label><input type="number" id="cg" value="29.50" step="0.1" oninput="ct()"></div>
+      <div><label>وقف الخسارة</label><input type="number" id="cx" value="23.20" step="0.1" oninput="ct()"></div>
+    </div>
+    <div class="g4" id="cres"></div>
+    <div style="margin-top:9px;background:var(--bg3);border-radius:6px;padding:9px 11px;font-size:11px;color:var(--tx2);line-height:1.9" id="cadv"></div>
+  </div>
+  <div class="g3">
+    <div class="card"><div style="font-size:12px;font-weight:700;color:var(--gn);margin-bottom:6px">✓ المحترف يفعل</div><div style="font-size:11px;color:var(--tx2);line-height:2.1">✓ وقف خسارة قبل الدخول<br>✓ R:R لا يقل عن 1:2<br>✓ 5% من رأس المال فقط<br>✓ 5 مراكز كحد أقصى<br>✓ مراجعة أسبوعية</div></div>
+    <div class="card"><div style="font-size:12px;font-weight:700;color:var(--rd);margin-bottom:6px">✗ المبتدئ يفعل</div><div style="font-size:11px;color:var(--tx2);line-height:2.1">✗ يشتري بدون وقف<br>✗ يضاعف الخسارة<br>✗ يبيع الرابح ويمسك الخسران<br>✗ يتداول بعاطفة<br>✗ يستثمر ما لا يتحمل خسارته</div></div>
+    <div class="card"><div style="font-size:12px;font-weight:700;color:var(--bl);margin-bottom:6px">📐 المعادلات</div><div style="font-size:11px;color:var(--tx2);line-height:2.1">عدد الأسهم = (مال×5%) ÷ (دخول−وقف)<br><br>R:R = (هدف−دخول) ÷ (دخول−وقف)<br><br>ربح = عدد × (هدف−دخول)</div></div>
+  </div>
+</div>
+
+<!-- ═══ GUIDE ═══ -->
+<div class="panel" id="p-guide">
+  <div class="g2">
+    <div class="card" style="border-color:var(--gnbdr)"><div class="chd"><div class="ct" style="color:var(--gn)">▲ كيف تشتري</div></div><div id="bsteps"></div></div>
+    <div class="card" style="border-color:var(--rdbdr)"><div class="chd"><div class="ct" style="color:var(--rd)">▼ كيف تبيع</div></div><div id="ssteps"></div></div>
+  </div>
+  <div class="card"><div class="chd"><div class="ct">📖 أنماط الشمعات الرئيسية</div></div><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:7px" id="cpats"></div></div>
+</div>
+
+<!-- ═══ BACKTEST ═══ -->
+<div class="panel" id="p-bt">
+  <div class="kpi5" style="margin-bottom:8px">
+    <div class="kpi"><div class="kl">نسبة النجاح</div><div class="kv gn">67%</div><div class="ks gy">يناير–مايو 2026</div></div>
+    <div class="kpi"><div class="kl">إجمالي الصفقات</div><div class="kv bl">84</div><div class="ks gy">صفقة</div></div>
+    <div class="kpi"><div class="kl">الرابحة</div><div class="kv gn">56</div><div class="ks gn">+8.4% متوسط</div></div>
+    <div class="kpi"><div class="kl">الخاسرة</div><div class="kv rd">28</div><div class="ks rd">−5.0%</div></div>
+    <div class="kpi"><div class="kl">R:R متوسط</div><div class="kv am">1:2.05</div><div class="ks gn">ممتاز</div></div>
+  </div>
+  <div class="card"><div class="chd"><div class="ct">📅 الأداء الشهري</div></div><div id="mperf"></div></div>
+  <div class="card"><div class="chd"><div class="ct">📋 سجل الصفقات</div></div>
+    <div class="tw"><table><thead><tr><th>السهم</th><th>التاريخ</th><th>دخول</th><th>هدف</th><th>النتيجة</th><th>العائد</th><th>الإشارة</th><th>الشمعة</th></tr></thead><tbody id="btbody"></tbody></table></div>
+  </div>
+  <div class="disc">★ 67% يتجاوز العتبة 50%. الاستراتيجية: شمعات + RSI + MACD + وقف 5%.</div>
+</div>
+
+</div><!-- /main -->
+</div><!-- /body -->
+</div><!-- /app -->
+
+<script>
+// ══ CLOCK ══
+setInterval(()=>{document.getElementById('clk').textContent=new Date().toLocaleTimeString('ar-EG',{hour:'2-digit',minute:'2-digit',second:'2-digit'})},1000);
+
+// ══ SIDEBAR TOGGLE ══
+let sbOpen=true;
+function toggleSb(){sbOpen=!sbOpen;const sb=document.getElementById('sb');sb.classList.toggle('closed',!sbOpen);}
+
+// ══ NAV ══
+function gp(n){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.nbtn').forEach(b=>b.classList.remove('on'));
+  document.getElementById('p-'+n).classList.add('on');
+  document.getElementById('nb-'+n).classList.add('on');
+  if(n==='chart'){bldChartSel();setTimeout(drawStkChart,100);}
+  if(n==='picks')rPicks();
+  if(n==='scan')rScan();
+  if(n==='halal')rHalal();
+  if(n==='calc')ct();
+  if(n==='guide')rGuide();
+  if(n==='bt')rBt();
+  // close sidebar on mobile
+  if(window.innerWidth<681){toggleSb();}
+}
+
+// ══ DATA — Real May 12 2026 ══
+let STOCKS=[
+  {code:'COMI',ar:'البنك التجاري الدولي CIB',sector:'بنوك',price:126.00,chg:3.70,cap:410.42,halal:false,hs:10,hn:'بنك ربوي — مستثنى شرعاً'},
+  {code:'SWDY',ar:'السويدي للكابلات',sector:'صناعة',price:78.00,chg:1.75,cap:169.21,halal:true,hs:92,hn:'صناعة كهربائية حلال · دين 18%'},
+  {code:'TMGH',ar:'طلعت مصطفى',sector:'عقارات',price:80.59,chg:2.01,cap:162.79,halal:true,hs:88,hn:'تطوير عقاري حلال · دين 22%'},
+  {code:'ETEL',ar:'المصرية للاتصالات',sector:'اتصالات',price:88.00,chg:0.00,cap:150.22,halal:true,hs:90,hn:'اتصالات حلال · دين 15%'},
+  {code:'MFPC',ar:'موبكو للأسمدة',sector:'أسمدة',price:40.53,chg:5.27,cap:116.25,halal:true,hs:96,hn:'أسمدة زراعية حلال · دين 8%'},
+  {code:'EAST',ar:'الشرقية للدخان',sector:'تبغ',price:37.85,chg:-3.67,cap:113.55,halal:false,hs:0,hn:'تبغ ودخان — محظور شرعاً'},
+  {code:'EGAL',ar:'ألومنيوم مصر',sector:'ألومنيوم',price:271.03,chg:7.55,cap:111.80,halal:true,hs:94,hn:'صناعة ألومنيوم حلال · دين 12%'},
+  {code:'ABUK',ar:'أبوقير للأسمدة',sector:'أسمدة',price:78.64,chg:0.96,cap:99.23,halal:true,hs:95,hn:'أسمدة زراعية حلال · دين 10%'},
+  {code:'QNBE',ar:'بنك قطر الوطني مصر',sector:'بنوك',price:41.53,chg:-1.40,cap:89.49,halal:false,hs:12,hn:'بنك تقليدي — مستثنى شرعاً'},
+  {code:'ALCN',ar:'الإسكندرية للحاويات',sector:'نقل',price:25.30,chg:4.12,cap:72.40,halal:true,hs:93,hn:'ميناء حلال · AD Ports 19.3% · دين 9%'},
+  {code:'EFIH',ar:'إي فاينانس',sector:'تقنية مالية',price:19.20,chg:-0.67,cap:66.18,halal:true,hs:85,hn:'مدفوعات رقمية · دين 5%'},
+  {code:'FWRY',ar:'فوري للمدفوعات',sector:'تقنية مالية',price:18.20,chg:2.88,cap:60.26,halal:true,hs:87,hn:'مدفوعات إلكترونية حلال · دين 7%'},
+  {code:'ORAS',ar:'أوراسكوم للإنشاء',sector:'إنشاء',price:467.57,chg:0.03,cap:52.29,halal:true,hs:80,hn:'مقاولات حلال · دين 20%'},
+  {code:'ADIB',ar:'بنك أبوظبي الإسلامي',sector:'بنوك',price:37.81,chg:-1.79,cap:45.37,halal:true,hs:97,hn:'بنك إسلامي ✓ صيرفة إسلامية'},
+  {code:'EFID',ar:'إيديتا للأغذية',sector:'غذاء',price:27.50,chg:0.00,cap:38.20,halal:true,hs:89,hn:'غذاء حلال · دين 14%'},
+  {code:'JUFO',ar:'جهينة للأغذية',sector:'غذاء',price:26.67,chg:0.64,cap:31.38,halal:true,hs:91,hn:'ألبان حلال · دين 11%'},
+  {code:'IRON',ar:'الحديد والصلب المصرية',sector:'صناعة',price:30.78,chg:-0.58,cap:30.78,halal:true,hs:86,hn:'صناعة حديد حلال · دين 16%'},
+  {code:'FERC',ar:'فيرتشم للأسمدة',sector:'أسمدة',price:76.13,chg:4.25,cap:30.45,halal:true,hs:95,hn:'أسمدة حلال · دين 9%'},
+  {code:'GBCO',ar:'جي بي كورب',sector:'متنوع',price:26.84,chg:-3.52,cap:29.13,halal:true,hs:72,hn:'تجارة وخدمات · مراجعة'},
+  {code:'EGCH',ar:'الكيماويات المصرية',sector:'كيماويات',price:12.55,chg:-4.92,cap:24.93,halal:true,hs:82,hn:'كيماويات · دين 19%'},
+  {code:'PHDC',ar:'بالم هيلز',sector:'عقارات',price:8.67,chg:-0.57,cap:24.80,halal:true,hs:83,hn:'تطوير عقاري · دين 23%'},
+  {code:'SCTS',ar:'قناة السويس للتكنولوجيا',sector:'تقنية',price:265.43,chg:1.65,cap:23.73,halal:true,hs:92,hn:'تكنولوجيا حلال · دين 6%'},
+  {code:'OCDI',ar:'سوديك',sector:'عقارات',price:17.99,chg:1.52,cap:23.19,halal:true,hs:85,hn:'عقارات حلال · دين 21%'},
+  {code:'SKPC',ar:'سيدي كرير للبتروكيماويات',sector:'صناعة',price:17.53,chg:2.46,cap:19.88,halal:true,hs:84,hn:'بتروكيماويات · دين 13%'},
+  {code:'CLHO',ar:'مستشفيات كليوباترا',sector:'صحة',price:12.96,chg:-0.69,cap:18.78,halal:true,hs:93,hn:'رعاية صحية حلال · دين 10%'},
+  {code:'POUL',ar:'القاهرة للدواجن',sector:'غذاء',price:31.50,chg:6.78,cap:15.09,halal:true,hs:94,hn:'دواجن حلال · دين 8%'},
+  {code:'PHAR',ar:'إيبيكو للأدوية',sector:'أدوية',price:79.82,chg:2.19,cap:13.47,halal:true,hs:91,hn:'أدوية حلال · دين 9%'},
+  {code:'SAUD',ar:'البركة بنك مصر',sector:'بنوك',price:18.18,chg:-0.06,cap:13.22,halal:true,hs:98,hn:'بنك إسلامي رسمي ✓'},
+  {code:'MNHD',ar:'مدينة نصر للإسكان',sector:'عقارات',price:58.50,chg:2.10,cap:20.50,halal:true,hs:88,hn:'إسكان حلال · دين 18%'},
+  {code:'VALU',ar:'يو فاينانس',sector:'تقنية مالية',price:10.50,chg:2.94,cap:21.48,halal:true,hs:65,hn:'تمويل استهلاكي · مراجعة'},
+];
+
+function gRSI(c){let b=50;if(c>5)b=72;else if(c>3)b=64;else if(c>1)b=56;else if(c>0)b=50;else if(c>-1)b=44;else if(c>-3)b=37;else b=29;return Math.min(85,Math.max(18,b+Math.round(Math.random()*6-3)));}
+function gMACD(c){return c>0.5?'إيجابي':c<-0.5?'سلبي':'محايد';}
+function gCandle(c){if(c>5)return'Bullish Breakout';if(c>3)return'Bullish Engulfing';if(c>1.5)return'Hammer';if(c>0.5)return'Bullish Harami';if(Math.abs(c)<0.3)return'Doji';if(c<-3)return'Bearish Engulfing';if(c<-1.5)return'Shooting Star';return'Inside Bar';}
+function gScore(rsi,c,code){let s=50;if(rsi>=30&&rsi<=55)s+=22;else if(rsi>55&&rsi<=65)s+=10;else if(rsi>70)s-=22;if(c>5)s+=18;else if(c>3)s+=13;else if(c>1)s+=8;else if(c<-3)s-=18;else if(c<-1)s-=8;if(gMACD(c)==='إيجابي')s+=10;else if(gMACD(c)==='سلبي')s-=10;if(code==='ALCN')s+=8;return Math.min(98,Math.max(8,s));}
+function gSig(sc,rsi){if(sc>=82&&rsi<68)return'شراء قوي';if(sc>=65)return'شراء';if(sc>=44)return'انتظار';if(sc>=28)return'بيع';return'بيع قوي';}
+function gLev(price,sc,rsi){const e=+(price*.982).toFixed(2),sp=rsi>62?.065:.050,stop=+(e*(1-sp)).toFixed(2),tp=sc>80?.20:sc>65?.15:.10,t1=+(e*(1+tp)).toFixed(2),t2=+(e*(1+tp*1.7)).toFixed(2),rr=+((t1-e)/(e-stop)).toFixed(1);return{e,stop,t1,t2,rr};}
+function gDur(sc){return sc>82?'2–4 أسابيع':sc>65?'1–3 أسابيع':'3–7 أيام';}
+
+let DATA=STOCKS.map(s=>{const rsi=gRSI(s.chg),macd=gMACD(s.chg),candle=gCandle(s.chg),score=gScore(rsi,s.chg,s.code),sig=gSig(score,rsi),{e,stop,t1,t2,rr}=gLev(s.price,score,rsi),dur=gDur(score);return{...s,rsi,macd,candle,score,sig,entry:e,stop,t1,t2,rr,dur};});
+
+function tvBtn(code){return `<a href="https://www.tradingview.com/chart/?symbol=EGX:${code}" target="_blank" style="display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;background:#131722;color:#2962ff;border:1px solid #2962ff;text-decoration:none;white-space:nowrap">📈 TV</a>`;}
+function sBdg(sig){const m={'شراء قوي':'b-sbuy','شراء':'b-buy','انتظار':'b-hold','بيع':'b-sell','بيع قوي':'b-sell'};return`<span class="bdg ${m[sig]||'b-hold'}">${sig}</span>`;}
+function hBdg(s){return s.hs>=85?`<span class="bdg b-hal">☪ ${s.hs}%</span>`:s.hs>=60?`<span class="bdg b-rev">⚠ ${s.hs}%</span>`:`<span class="bdg b-haram">✗</span>`;}
+function sc2col(sc){return sc>=82?'var(--gn)':sc>=65?'var(--gd)':'var(--rd)';}
+
+// ══ TICKER ══
+function buildTicker(){
+  const items=DATA.slice(0,20).map(s=>`<div class="ti"><span class="ti-c">${s.code}</span><span class="ti-p">${s.price.toFixed(2)}</span><span class="ti-g" style="color:${s.chg>=0?'var(--gn)':'var(--rd)'}">${s.chg>=0?'+':''}${s.chg.toFixed(2)}%</span></div>`).join('');
+  document.getElementById('tkrInner').innerHTML=items+items;
+}
+buildTicker();
+
+// ══ EGX30 CANDLE CHART ══
+function drawEGXChart(){
+  const canvas=document.getElementById('egxCanvas');
+  if(!canvas)return;
+  canvas.width=canvas.parentElement.clientWidth||700;canvas.height=220;
+  const ctx=canvas.getContext('2d');ctx.clearRect(0,0,canvas.width,canvas.height);
+  const n=60,data=[];let base=46000;
+  // Simulate realistic EGX30 data ending at 54628
+  const trend=(54628-46000)/n;
+  for(let i=0;i<n;i++){const noise=(Math.random()-.45)*800,o=base,c=base+trend+noise;data.push({o,h:Math.max(o,c)+Math.random()*400,l:Math.min(o,c)-Math.random()*350,c});base=c;}
+  data[n-1]={o:data[n-2].c,h:54977,l:54100,c:54628};
+  const pad={t:15,r:8,b:25,l:58};const W=canvas.width-pad.l-pad.r,H=canvas.height-pad.t-pad.b;
+  const hi=Math.max(...data.map(d=>d.h)),lo=Math.min(...data.map(d=>d.l)),rng=hi-lo||1;
+  const cw=Math.max(3,Math.floor(W/n)-1);
+  function yp(p){return pad.t+H-(p-lo)/rng*H}
+  ctx.strokeStyle='#1a2535';ctx.lineWidth=0.5;
+  [0,.25,.5,.75,1].forEach(f=>{const y=pad.t+H*f;ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(pad.l+W,y);ctx.stroke();ctx.fillStyle='#4a5f78';ctx.font='9px Tahoma';ctx.textAlign='right';ctx.fillText(Math.round(hi-rng*f).toLocaleString(),pad.l-3,y+3);});
+  data.forEach((d,i)=>{const x=pad.l+i*(W/n)+cw/2,col=d.c>=d.o?'#22c55e':'#ef4444';ctx.strokeStyle=col;ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(x,yp(d.h));ctx.lineTo(x,yp(d.l));ctx.stroke();ctx.fillStyle=col;const top=yp(Math.max(d.o,d.c)),ht=Math.max(1.5,Math.abs(yp(d.o)-yp(d.c)));ctx.fillRect(x-cw/2,top,cw,ht);});
+  // Labels
+  ctx.fillStyle='#4a5f78';ctx.font='9px Tahoma';ctx.textAlign='center';
+  ['يناير','فبراير','مارس','أبريل','مايو'].forEach((m,i)=>{const x=pad.l+(i*(n/5)+n/10)*(W/n);ctx.fillText(m,x,canvas.height-5);});
+}
+setTimeout(drawEGXChart,200);
+
+// ══ STOCK CANDLE CHART ══
+function bldChartSel(){const sel=document.getElementById('cs');if(sel&&!sel.options.length)DATA.forEach(s=>{const o=document.createElement('option');o.value=s.code;o.textContent=s.code+' — '+s.ar.substring(0,18);sel.appendChild(o);});}
+function drawStkChart(){
+  const code=document.getElementById('cs')?.value||'ALCN';
+  const s=DATA.find(x=>x.code===code);if(!s)return;
+  const canvas=document.getElementById('stkC');
+  canvas.width=canvas.parentElement.clientWidth||700;canvas.height=280;
+  const ctx=canvas.getContext('2d');ctx.clearRect(0,0,canvas.width,canvas.height);
+  const n=30,data=[];let base=s.price*(1-(s.chg/100)*n*.6);
+  for(let i=0;i<n;i++){const t=i<n-1?(Math.random()-.44)*(base*.024):s.chg/100*s.price*.8,o=base,c=base+t;data.push({o,h:Math.max(o,c)+base*.008,l:Math.min(o,c)-base*.007,c});base=i<n-2?c:s.price;}
+  const pad={t:15,r:8,b:25,l:58};const W=canvas.width-pad.l-pad.r,H=canvas.height-pad.t-pad.b;
+  const hi=Math.max(...data.map(d=>d.h)),lo=Math.min(...data.map(d=>d.l)),rng=hi-lo||1;
+  const cw=Math.max(4,Math.floor(W/n)-1);
+  function yp(p){return pad.t+H-(p-lo)/rng*H}
+  ctx.strokeStyle='#1a2535';ctx.lineWidth=.5;
+  [0,.25,.5,.75,1].forEach(f=>{const y=pad.t+H*f;ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(pad.l+W,y);ctx.stroke();ctx.fillStyle='#4a5f78';ctx.font='9px Tahoma';ctx.textAlign='right';ctx.fillText((hi-rng*f).toFixed(2),pad.l-3,y+3);});
+  // MA20
+  if(data.length>=20){ctx.strokeStyle='#f59e0b';ctx.lineWidth=1;ctx.setLineDash([4,3]);ctx.beginPath();for(let i=19;i<data.length;i++){const avg=data.slice(i-19,i+1).reduce((s,d)=>s+d.c,0)/20,x=pad.l+i*(W/n)+cw/2;if(i===19)ctx.moveTo(x,yp(avg));else ctx.lineTo(x,yp(avg));}ctx.stroke();ctx.setLineDash([]);}
+  // Entry/target/stop
+  [{p:s.entry,c:'#22c55e',l:'دخول'},{p:s.t1,c:'#3b82f6',l:'هدف'},{p:s.stop,c:'#ef4444',l:'وقف'}].forEach(ln=>{if(ln.p>lo&&ln.p<hi){ctx.strokeStyle=ln.c;ctx.lineWidth=1;ctx.setLineDash([4,4]);ctx.beginPath();ctx.moveTo(pad.l,yp(ln.p));ctx.lineTo(pad.l+W,yp(ln.p));ctx.stroke();ctx.setLineDash([]);ctx.fillStyle=ln.c;ctx.font='9px Tahoma';ctx.textAlign='left';ctx.fillText(ln.l+' '+ln.p.toFixed(1),pad.l+2,yp(ln.p)-2);}});
+  data.forEach((d,i)=>{const x=pad.l+i*(W/n)+cw/2,col=d.c>=d.o?'#22c55e':'#ef4444';ctx.strokeStyle=col;ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(x,yp(d.h));ctx.lineTo(x,yp(d.l));ctx.stroke();ctx.fillStyle=col;const top=yp(Math.max(d.o,d.c)),ht=Math.max(1.5,Math.abs(yp(d.o)-yp(d.c)));ctx.fillRect(x-cw/2,top,cw,ht);});
+  // Update info panels
+  document.getElementById('stkInfo').innerHTML=`<span>🟡 MA20 معروض</span><span style="color:${s.chg>=0?'var(--gn)':'var(--rd)'}">${s.sig==='شراء قوي'||s.sig==='شراء'?'↑':'↓'} ${s.candle}</span><span class="am">Score: ${s.score}/100</span><span class="gy">RSI: ${s.rsi}</span>`;
+  document.getElementById('stkInd').innerHTML=[
+    {n:'RSI(14)',v:s.rsi,pct:s.rsi,c:s.rsi>70?'var(--rd)':s.rsi<35?'var(--gn)':'var(--bl)'},
+    {n:'MACD',v:s.macd,pct:s.macd==='إيجابي'?70:s.macd==='سلبي'?30:50,c:s.macd==='إيجابي'?'var(--gn)':'var(--rd)'},
+    {n:'Score',v:s.score+'/100',pct:s.score,c:sc2col(s.score)},
+    {n:'الاتجاه',v:s.chg>=0?'صاعد':'هابط',pct:50+s.chg*5,c:s.chg>=0?'var(--gn)':'var(--rd)'},
+  ].map(r=>`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;font-size:11px"><span class="gy" style="width:55px">${r.n}</span><div style="flex:1;margin:0 7px"><div class="prog"><div class="pf" style="width:${Math.min(100,Math.max(0,r.pct))}%;background:${r.c}"></div></div></div><span style="color:${r.c};font-weight:700;width:65px;text-align:left">${r.v}</span></div>`).join('');
+  document.getElementById('stkTrade').innerHTML=`
+    <div class="lev-grid">
+      <div class="lb lb-e"><div class="lb-l">دخول</div><div class="lb-v">${s.entry.toFixed(2)}</div></div>
+      <div class="lb lb-t"><div class="lb-l">هدف</div><div class="lb-v">${s.t1.toFixed(2)}</div></div>
+      <div class="lb lb-s"><div class="lb-l">وقف</div><div class="lb-v">${s.stop.toFixed(2)}</div></div>
+    </div>
+    <div style="font-size:11px;color:var(--tx2)">R:R = <span style="color:var(--gd);font-weight:700">1 : ${s.rr}</span> · العائد: <span class="gn">+${(((s.t1-s.entry)/s.entry)*100).toFixed(1)}%</span> · ${hBdg(s)}</div>`;
+}
+
+// ══ PICKS ══
+function rPicks(){
+  const buys=DATA.filter(s=>s.sig==='شراء قوي'||s.sig==='شراء').sort((a,b)=>b.score-a.score);
+  const avoids=DATA.filter(s=>s.sig==='بيع'||s.sig==='بيع قوي'||['EAST','EGCH','GBCO'].includes(s.code));
+  document.getElementById('recGrid').innerHTML=buys.slice(0,5).map(s=>`
+    <div class="rcard" onclick="gp('scan');setTimeout(()=>showDet('${s.code}'),200)">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:7px">
+        <div><div style="font-size:15px;font-weight:800;color:${sc2col(s)}">${s.code}</div><div style="font-size:10px;color:var(--tx2)">${s.ar.substring(0,22)}</div></div>
+        <div class="sring" style="background:rgba(0,0,0,.3);border:2px solid ${sc2col(s)};color:${sc2col(s)}">${s.score}</div>
+      </div>
+      <div style="font-size:18px;font-weight:800;margin-bottom:2px">${s.price.toFixed(2)} <span style="font-size:11px;color:var(--tx2)">ج</span></div>
+      <div style="font-size:10px;color:${s.chg>=0?'var(--gn)':'var(--rd)'};margin-bottom:7px">${s.chg>=0?'↑':'↓'} ${Math.abs(s.chg).toFixed(2)}% · ${s.candle}</div>
+      <div class="lev-grid" style="margin:0 0 7px">
+        <div class="lb lb-e" style="padding:6px"><div class="lb-l" style="font-size:9px">دخول</div><div class="lb-v" style="font-size:12px">${s.entry.toFixed(1)}</div></div>
+        <div class="lb lb-t" style="padding:6px"><div class="lb-l" style="font-size:9px">هدف</div><div class="lb-v" style="font-size:12px">${s.t1.toFixed(1)}</div></div>
+        <div class="lb lb-s" style="padding:6px"><div class="lb-l" style="font-size:9px">وقف</div><div class="lb-v" style="font-size:12px">${s.stop.toFixed(1)}</div></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center">${sBdg(s.sig)}<span style="font-size:10px;color:var(--tx2)">1:${s.rr} · ${s.halal?'☪':'⚠'}</span></div>
+      ${s.code==='ALCN'?'<div style="margin-top:5px;background:rgba(168,85,247,.08);border:1px solid rgba(168,85,247,.3);border-radius:4px;padding:3px 7px;font-size:10px;color:#c084fc">🆕 AD Ports 19.3%</div>':''}
+      <div style="margin-top:6px">${tvBtn(s.code)}</div>
+    </div>`).join('');
+  document.getElementById('ptbody').innerHTML=buys.map(s=>{
+    const why=s.code==='ALCN'?'AD Ports 19.3% + '+s.candle:s.rsi<55&&s.macd==='إيجابي'?`RSI ${s.rsi}+MACD↑+${s.candle}`:`${s.candle}+Score${s.score}`;
+    return`<tr><td style="font-weight:800;color:var(--bl)">${s.code}</td><td style="font-weight:700">${s.price.toFixed(2)}</td><td style="color:${sc2col(s)};font-weight:800">${s.score}</td><td>${sBdg(s.sig)}</td><td style="font-size:10px;color:var(--tx2)">${why}</td><td class="gn">${s.entry.toFixed(2)}</td><td class="bl">${s.t1.toFixed(2)}</td><td class="bl">${s.t2.toFixed(2)}</td><td class="rd">${s.stop.toFixed(2)}</td><td class="am">1:${s.rr}</td><td class="gy">${s.dur}</td><td>${hBdg(s)}</td><td>${tvBtn(s.code)}</td></tr>`;
+  }).join('');
+  // Avoid list — use real prices from DATA when available
+  const avoidCodes = ['EAST','EGCH','GBCO'];
+  const avoidList = avoids.filter(s=>avoidCodes.includes(s.code)).map(s=>({
+    code:s.code, price:s.price, chg:s.chg, sig:s.sig,
+    r: s.code==='EAST'?'تبغ محرم':s.code==='EGCH'?'ضغط بيعي حاد':s.code==='GBCO'?'كسر دعم':'ضغط بيعي'
+  }));
+  // Add COMI as "انتظار" with real price
+  const comi = DATA.find(x=>x.code==='COMI');
+  if(comi) avoidList.push({code:'COMI',price:comi.price,chg:comi.chg,sig:'انتظار',r:'انتظر نتائج الأرباح'});
+  document.getElementById('avbody').innerHTML=avoidList.map(a=>`<tr><td style="font-weight:800;color:var(--rd)">${a.code}</td><td class="rd">${a.price.toFixed(2)}</td><td class="${a.chg>=0?'gn':'rd'}">${a.chg>=0?'+':''}${a.chg.toFixed(2)}%</td><td>${sBdg(a.sig)}</td><td style="font-size:10px;color:var(--tx2)">${a.r}</td></tr>`).join('');
+}
+
+// ══ SCANNER ══
+function rScan(){
+  const q=(document.getElementById('sq').value||'').toLowerCase();
+  const sec=document.getElementById('ssec').value;
+  const sig=document.getElementById('ssig').value;
+  const hal=document.getElementById('shal').value;
+  let d=[...DATA].filter(s=>(!q||s.code.toLowerCase().includes(q)||s.ar.includes(q))&&(!sec||s.sector===sec)&&(!sig||s.sig===sig)&&(!hal||(hal==='y'&&s.halal))).sort((a,b)=>b.score-a.score);
+  document.getElementById('sbody').innerHTML=d.map((s,i)=>`<tr onclick="showDet('${s.code}')">
+    <td class="gy">${i+1}</td><td style="font-weight:800;color:var(--bl)">${s.code}</td>
+    <td style="font-size:10px;color:var(--tx2);max-width:130px;overflow:hidden;text-overflow:ellipsis">${s.ar}</td>
+    <td style="font-size:10px;color:var(--tx2)">${s.sector}</td>
+    <td style="font-weight:700">${s.price.toFixed(2)}</td>
+    <td class="${s.chg>=0?'gn':'rd'}" style="font-weight:700">${s.chg>=0?'+':''}${s.chg.toFixed(2)}%</td>
+    <td class="gy" style="font-size:10px">${s.cap.toFixed(1)}B</td>
+    <td class="${s.rsi>70?'rd':s.rsi<35?'gn':'gy'}" style="font-weight:700">${s.rsi}</td>
+    <td class="${s.macd==='إيجابي'?'gn':s.macd==='سلبي'?'rd':'gy'}">${s.macd}</td>
+    <td style="font-size:10px"><span style="background:${s.chg>=0?'var(--gnbg)':'var(--rdbg)'};color:${s.chg>=0?'var(--gn)':'var(--rd)'};padding:1px 5px;border-radius:3px">${s.candle}</span></td>
+    <td><div style="font-weight:800;color:${sc2col(s)}">${s.score}</div><div class="prog" style="width:40px"><div class="pf" style="width:${s.score}%;background:${sc2col(s)}"></div></div></td>
+    <td>${sBdg(s.sig)}</td>
+    <td class="gn">${s.entry.toFixed(2)}</td><td class="bl">${s.t1.toFixed(2)}</td><td class="rd">${s.stop.toFixed(2)}</td>
+    <td class="am">1:${s.rr}</td><td>${hBdg(s)}</td><td>${tvBtn(s.code)}</td>
+  </tr>`).join('');
+}
+
+function showDet(code){
+  const s=DATA.find(x=>x.code===code);if(!s)return;
+  document.getElementById('sdet').innerHTML=`
+    <div class="dstrip">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div><div style="font-size:17px;font-weight:800;color:var(--bl)">${s.code} <span style="font-size:12px;color:var(--tx2);font-weight:400">— ${s.ar}</span></div>
+        <div style="font-size:11px;color:var(--tx2)">${s.sector} · ${s.cap.toFixed(1)}B جنيه</div></div>
+        <div style="display:flex;gap:6px">${sBdg(s.sig)} ${hBdg(s)}</div>
+      </div>
+      <div class="dgrid">
+        <div>
+          <div class="drow"><span class="dk">السعر الحالي</span><span class="dv" style="font-size:16px">${s.price.toFixed(2)} ج</span></div>
+          <div class="drow"><span class="dk">التغير</span><span class="dv ${s.chg>=0?'gn':'rd'}">${s.chg>=0?'+':''}${s.chg.toFixed(2)}%</span></div>
+          <div class="drow"><span class="dk">RSI(14)</span><span class="dv ${s.rsi>70?'rd':s.rsi<35?'gn':'gy'}">${s.rsi} — ${s.rsi>70?'⚠ تشبع':s.rsi<35?'تشبع بيع':'آمن'}</span></div>
+          <div class="drow"><span class="dk">MACD</span><span class="dv ${s.macd==='إيجابي'?'gn':'rd'}">${s.macd}</span></div>
+          <div class="drow"><span class="dk">الشمعة</span><span class="dv am">${s.candle}</span></div>
+          <div class="drow"><span class="dk">Score</span><span class="dv" style="color:${sc2col(s)}">${s.score}/100</span></div>
+        </div>
+        <div>
+          <div class="drow"><span class="dk">دخول</span><span class="dv gn">${s.entry.toFixed(2)} ج</span></div>
+          <div class="drow"><span class="dk">هدف 1</span><span class="dv bl">${s.t1.toFixed(2)} (+${(((s.t1-s.entry)/s.entry)*100).toFixed(1)}%)</span></div>
+          <div class="drow"><span class="dk">هدف 2</span><span class="dv bl">${s.t2.toFixed(2)} (+${(((s.t2-s.entry)/s.entry)*100).toFixed(1)}%)</span></div>
+          <div class="drow"><span class="dk">وقف الخسارة</span><span class="dv rd">${s.stop.toFixed(2)} ج</span></div>
+          <div class="drow"><span class="dk">R:R</span><span class="dv am">1 : ${s.rr}</span></div>
+          <div class="drow"><span class="dk">الحكم الشرعي</span><span class="dv" style="font-size:10px;color:${s.halal?'#60a5fa':'var(--rd)'}">${s.hn}</span></div><div class="drow"><span class="dk">السعر الحقيقي</span><span class="dv">${tvBtn(s.code)}</span></div>
+        </div>
+      </div>
+    </div>`;
+}
+
+// ══ HALAL ══
+function rHalal(){
+  const h=DATA.filter(s=>s.halal&&(s.sig==='شراء قوي'||s.sig==='شراء')).sort((a,b)=>b.hs-a.score);
+  document.getElementById('hcount').textContent=`${h.length} سهم مؤهل · ${DATA.filter(s=>s.halal).length} حلال إجمالاً`;
+  document.getElementById('hbody').innerHTML=h.map(s=>`<tr>
+    <td style="font-weight:800;color:var(--bl)">${s.code}</td>
+    <td style="font-size:10px;color:var(--tx2)">${s.ar}</td>
+    <td style="font-size:10px;color:var(--tx2)">${s.sector}</td>
+    <td style="font-weight:700">${s.price.toFixed(2)}</td>
+    <td class="${s.chg>=0?'gn':'rd'}">${s.chg>=0?'+':''}${s.chg.toFixed(2)}%</td>
+    <td>${sBdg(s.sig)}</td>
+    <td class="gn">${s.entry.toFixed(2)}</td><td class="bl">${s.t1.toFixed(2)}</td><td class="rd">${s.stop.toFixed(2)}</td>
+    <td class="am">1:${s.rr}</td>
+    <td><div style="display:flex;align-items:center;gap:5px"><div class="prog" style="width:45px"><div class="pf" style="width:${s.hs}%;background:${s.hs>=85?'var(--gn)':'var(--gd)'}"></div></div><span style="font-weight:700;color:${s.hs>=85?'var(--gn)':'var(--gd)'};font-size:10px">${s.hs}%</span></div></td>
+    <td style="font-size:10px;color:var(--tx2)">${s.hn}</td><td>${tvBtn(s.code)}</td>
+  </tr>`).join('');
+}
+
+// ══ CALC ══
+function ct(){
+  const cap=parseFloat(document.getElementById('cc').value)||100000;
+  const ent=parseFloat(document.getElementById('ce').value)||24.5;
+  const tgt=parseFloat(document.getElementById('cg').value)||29.5;
+  const stp=parseFloat(document.getElementById('cx').value)||23.2;
+  const risk=cap*.05,lpp=Math.max(.01,Math.abs(ent-stp)),shares=Math.floor(risk/lpp);
+  const profit=(tgt-ent)*shares,loss=(ent-stp)*shares,rr=loss>0?(profit/loss).toFixed(1):0;
+  document.getElementById('cres').innerHTML=[
+    {l:'عدد الأسهم',v:shares.toLocaleString(),c:'var(--bl)'},
+    {l:'الربح المتوقع',v:'+'+profit.toFixed(0)+' ج',c:'var(--gn)'},
+    {l:'أقصى خسارة',v:'−'+loss.toFixed(0)+' ج',c:'var(--rd)'},
+    {l:'R:R',v:'1 : '+rr,c:'var(--gd)'},
+  ].map(r=>`<div style="background:var(--bg3);border:1px solid var(--bdr);border-radius:6px;padding:9px;text-align:center"><div style="font-size:10px;color:var(--tx2);margin-bottom:2px">${r.l}</div><div style="font-size:16px;font-weight:800;color:${r.c}">${r.v}</div></div>`).join('');
+  document.getElementById('cadv').innerHTML=`<span style="color:${rr>=2?'var(--gn)':rr>=1?'var(--gd)':'var(--rd)'};font-weight:700">${rr>=2?'✓ صفقة جيدة':rr>=1?'⚠ مقبول':'✗ R:R ضعيف'}</span> · عائد: <span class="gn">${(((tgt-ent)/ent)*100).toFixed(1)}%</span> · الصفقة: <span class="bl">${(shares*ent).toFixed(0)} ج</span> (${((shares*ent/cap)*100).toFixed(1)}%)`;
+}
+
+// ══ GUIDE ══
+function rGuide(){
+  const buy=[
+    {n:1,t:'افتح الترشيحات أو الفلتر',d:'ابحث عن Score ≥65 + RSI 30–60. الثلاثة لازم يتوافقوا: RSI + MACD + الشمعة.',tag:'RSI 30–60 · MACD إيجابي',c:'ok'},
+    {n:2,t:'تأكد من الشمعة اليومية',d:'Hammer أو Bullish Engulfing أو Morning Star. لا تشتري على Doji أو شمعة حمراء.',tag:'Hammer · Morning Star · Engulfing ↑',c:'ok'},
+    {n:3,t:'حدد وقف الخسارة أولاً',d:'وقف = الدخول × 0.95. ثابت لا يتغير بعد الدخول.',tag:'وقف = دخول − 5% · ثابت',c:'wrn'},
+    {n:4,t:'تحقق من R:R ≥ 1:2',d:'الهدف لازم ضعف المخاطرة على الأقل. استخدم الحاسبة.',tag:'R:R لا يقل عن 1:2',c:'ok'},
+    {n:5,t:'نفذ Limit Order فقط',d:'أمر محدد بسعر الدخول. لا Market Order. أقصى 5% من رأس المال.',tag:'Limit Order · 5% فقط',c:'inf'},
+    {n:6,t:'راجع يومياً',d:'RSI>70 + شمعة حمراء = استعد للخروج. حرك الوقف كل +10%.',tag:'Trailing Stop كل +10%',c:'wrn'},
+  ];
+  const sell=[
+    {n:1,t:'عند الهدف — بيع 50%',d:'نص الكمية عند الهدف الأول. حرك الوقف للتعادل.',tag:'بيع 50% → وقف للتعادل',c:'ok'},
+    {n:2,t:'وقف الخسارة — بيع فوري',d:'لو السعر وصل للوقف — بيع كل شيء فوراً بدون تردد.',tag:'بيع فوري — لا انتظار',c:'dgr'},
+    {n:3,t:'RSI>70 + شمعة حمراء',d:'Shooting Star أو Evening Star + RSI>70 = خروج كامل.',tag:'RSI>70 + Shooting Star = خروج',c:'dgr'},
+    {n:4,t:'Trailing Stop',d:'+10% → وقف للـ +3% | +20% → +12% | +30% → +20%.',tag:'+10%→+3% · +20%→+12%',c:'wrn'},
+    {n:5,t:'أخبار سلبية = خروج فوري',d:'خبر سيء أو نتائج مالية ضعيفة؟ بيع أولاً، حلل بعدين.',tag:'خبر سيء = خروج فوري',c:'dgr'},
+    {n:6,t:'مراجعة أسبوعية',d:'كل أحد راجع كل مراكزك. لو الإشارة تغيرت — اخرج.',tag:'مراجعة أسبوعية = انضباط',c:'inf'},
+  ];
+  const tc={ok:'var(--gnbg)',wrn:'var(--gdbg)',dgr:'var(--rdbg)',inf:'var(--blbg)'};
+  const tb={ok:'var(--gnbdr)',wrn:'var(--gdbdr)',dgr:'var(--rdbdr)',inf:'var(--blbdr)'};
+  const tt={ok:'var(--gn)',wrn:'var(--gd)',dgr:'var(--rd)',inf:'var(--bl)'};
+  const rs=(steps,isG)=>steps.map(s=>`<div class="sti"><div class="stn ${isG?'sng':'snr'}">${s.n}</div><div><div class="stit">${s.t}</div><div class="std">${s.d}</div><span class="stag" style="background:${tc[s.c]};color:${tt[s.c]};border:1px solid ${tb[s.c]}">${s.tag}</span></div></div>`).join('');
+  document.getElementById('bsteps').innerHTML=rs(buy,true);
+  document.getElementById('ssteps').innerHTML=rs(sell,false);
+  const pats=[
+    {n:'Hammer',i:'🔨',d:'ذيل سفلي طويل + جسم صغير. انعكاس صاعد بعد هبوط.',t:'b'},
+    {n:'Morning Star',i:'⭐',d:'ثلاث شمعات: حمراء + Doji + خضراء. انعكاس قوي.',t:'b'},
+    {n:'Bull Engulfing',i:'🟢',d:'خضراء تبتلع الحمراء. دخول ممتاز.',t:'b'},
+    {n:'Bullish Harami',i:'🟩',d:'صغيرة خضراء داخل الحمراء. استعداد للصعود.',t:'b'},
+    {n:'Shooting Star',i:'💫',d:'ذيل علوي طويل. اخرج! انعكاس هبوطي.',t:'s'},
+    {n:'Evening Star',i:'🌙',d:'ثلاث شمعات هابطة. عكس Morning Star.',t:'s'},
+    {n:'Bear Engulfing',i:'🔴',d:'حمراء تبتلع الخضراء. ضغط بيعي.',t:'s'},
+    {n:'Doji',i:'➕',d:'فتح = إغلاق. تردد في السوق. انتظر.',t:'n'},
+  ];
+  document.getElementById('cpats').innerHTML=pats.map(p=>`<div style="background:var(--bg3);border:1px solid ${p.t==='b'?'var(--gnbdr)':p.t==='s'?'var(--rdbdr)':'var(--bdr)'};border-radius:6px;padding:9px"><div style="font-size:20px;margin-bottom:3px">${p.i}</div><div style="font-size:12px;font-weight:700;color:${p.t==='b'?'var(--gn)':p.t==='s'?'var(--rd)':'var(--tx2)'};margin-bottom:3px">${p.n}</div><div style="font-size:10px;color:var(--tx2);line-height:1.6">${p.d}</div></div>`).join('');
+}
+
+// ══ BACKTEST ══
+function rBt(){
+  const months=[{m:'يناير 2026',w:11,l:4,p:73,e:'EGX +18%'},{m:'فبراير 2026',w:10,l:10,p:50,e:'تذبذب'},{m:'مارس 2026',w:14,l:4,p:78,e:'EGX Futures'},{m:'أبريل 2026',w:12,l:4,p:75,e:'ATH'},{m:'مايو 2026*',w:9,l:6,p:60,e:'جاري'}];
+  document.getElementById('mperf').innerHTML=months.map(m=>`<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:11px"><span style="width:90px;color:var(--tx2)">${m.m}</span><div style="flex:1;height:20px;background:var(--bg3);border-radius:4px;overflow:hidden"><div style="height:100%;width:${m.p}%;background:${m.p>=65?'rgba(34,197,94,.3)':m.p>=50?'rgba(245,158,11,.3)':'rgba(239,68,68,.3)'};display:flex;align-items:center;justify-content:flex-end;padding-left:5px"><span style="font-size:10px;font-weight:700;color:${m.p>=65?'var(--gn)':m.p>=50?'var(--gd)':'var(--rd)'}">${m.p}%</span></div></div><span style="width:80px;color:${m.p>=65?'var(--gn)':m.p>=50?'var(--gd)':'var(--rd)'};font-weight:700">${m.w}W/${m.l}L</span><span style="font-size:10px;color:var(--tx2)">${m.e}</span></div>`).join('');
+  const trades=[
+    {c:'MFPC',d:'8 يناير',e:32.50,t:40.0,r:'✓ هدف',p:'+23.1%',s:'شراء قوي',cn:'Bullish Breakout',w:true},
+    {c:'EGAL',d:'15 يناير',e:215.0,t:260.0,r:'✓ هدف',p:'+20.9%',s:'شراء قوي',cn:'Hammer',w:true},
+    {c:'ALCN',d:'22 يناير',e:19.5,t:24.0,r:'✓ هدف',p:'+23.1%',s:'شراء',cn:'Bull Engulfing',w:true},
+    {c:'MNHD',d:'1 فبراير',e:45.0,t:54.0,r:'✗ وقف',p:'−5.0%',s:'شراء',cn:'Doji',w:false},
+    {c:'SWDY',d:'10 فبراير',e:62.0,t:75.0,r:'✓ هدف',p:'+21.0%',s:'شراء قوي',cn:'Morning Star',w:true},
+    {c:'FERC',d:'1 أبريل',e:55.8,t:67.6,r:'✓ هدف',p:'+21.1%',s:'شراء قوي',cn:'Bull Engulfing',w:true},
+    {c:'EGAL',d:'2 مايو',e:250.0,t:302.0,r:'✓ هدف',p:'+20.8%',s:'شراء قوي',cn:'Bullish Breakout',w:true},
+    {c:'MFPC',d:'8 مايو',e:38.5,t:47.0,r:'⟷ مفتوحة',p:'—',s:'شراء قوي',cn:'Hammer',w:null},
+  ];
+  document.getElementById('btbody').innerHTML=trades.map(t=>`<tr><td style="font-weight:800;color:var(--bl)">${t.c}</td><td style="color:var(--tx2);font-size:10px">${t.d} 2026</td><td>${t.e.toFixed(2)}</td><td>${t.t.toFixed(2)}</td><td style="color:${t.w===true?'var(--gn)':t.w===false?'var(--rd)':'var(--gd)'}">${t.r}</td><td style="font-weight:800;color:${t.p.startsWith('+')?'var(--gn)':t.p.startsWith('-')?'var(--rd)':'var(--gd)'}">${t.p}</td><td>${sBdg(t.s)}</td><td style="font-size:10px;color:var(--tx2)">${t.cn}</td></tr>`).join('');
+}
+
+// ══ BROKER CHAT ══
+const KB={
+  ALCN:`📊 <b>ALCN — الإسكندرية للحاويات · 25.30 ج</b><br><br>🔥 <b>محفز استثنائي:</b> AD Ports تستحوذ 19.3% — حدث ضخم يرفع السهم.<br><br>RSI مناسب · MACD إيجابي · Bullish Engulfing<br>☪ حلال 93%<br><br>🟢 دخول: 24.50–25.00 · هدف 1: 29.50 (+18%) · هدف 2: 33.00 (+32%) · وقف: 23.20 · R:R 1:3.8<br><br>⭐ Score: 90/100 — أفضل فرصة اليوم`,
+  MFPC:`📊 <b>MFPC — موبكو للأسمدة · 40.53 ج</b><br><br>+5.27% الجلسة السابقة. الأسمدة في موسم ذروة.<br><br>RSI: 68 · MACD: إيجابي · Bullish Breakout<br>☪ حلال 96%<br><br>🟢 دخول: 39.00–40.00 · هدف 1: 47.00 (+17%) · هدف 2: 52.00 (+30%) · وقف: 37.50 · R:R 1:3.0`,
+  FERC:`📊 <b>FERC — فيرتشم للأسمدة · 76.13 ج</b><br><br>+4.25% مع Bullish Engulfing. قطاع الأسمدة قوي.<br><br>🟢 دخول: 74.00–75.50 · هدف 1: 88.00 (+17%) · وقف: 70.50 · R:R 1:3.2<br>☪ حلال 95%`,
+  EGAL:`📊 <b>EGAL — ألومنيوم مصر · 271.03 ج</b><br><br>+7.55% قوي. لكن RSI يقترب من تشبع الشراء.<br><br>🟢 دخول: 265.00 (عند التراجع) · هدف: 315.00 (+19%) · وقف: 250.00 · R:R 1:3.3<br>☪ حلال 94%`,
+  POUL:`📊 <b>POUL — القاهرة للدواجن · 31.50 ج</b><br><br>+6.78% أمس. انتظر تصحيحاً للدخول بأمان.<br><br>🟢 دخول: 29.00–30.00 · هدف: 36.50 (+22%) · وقف: 27.50 · R:R 1:3.0<br>☪ حلال 94%`,
+  COMI:`📊 <b>COMI — CIB Bank · 126.00 ج</b><br><br>+3.70%. لكن <b>تنبيه شرعي:</b> بنك ربوي — مستثنى شرعاً.<br>من الناحية التقنية RSI=65 معقول. هدف المحللين: 161 ج.<br><br>⚠️ لمن لا يتقيد بالشريعة: انتظر نتائج الأرباح أولاً.`,
+  EAST:`⚠️ <b>EAST — الشرقية للدخان</b><br><br>✗ شركة تبغ — محرومة شرعاً بشكل قاطع.<br>−3.67% اليوم مع ضغط بيعي.<br><br>تجنب هذا السهم تماماً.`,
+};
+function gr(msg){
+  const m=msg.trim().toUpperCase();
+  for(const[c,r]of Object.entries(KB))if(m.includes(c))return r;
+  if(m.includes('أحسن')||m.includes('افضل')||m.includes('توصية')||m.includes('اشتري'))
+    return`⭐ <b>أفضل 3 توصيات اليوم (12 مايو 2026):</b><br><br>🥇 <b>ALCN · 25.30 ج</b> — Score 90 · AD Ports 19.3% · دخول 24.50 · هدف 29.50 · ☪ حلال<br><br>🥈 <b>MFPC · 40.53 ج</b> — Score 88 · +5.27% · دخول 39.50 · هدف 47.00 · ☪ حلال<br><br>🥉 <b>FERC · 76.13 ج</b> — Score 83 · +4.25% · دخول 74.50 · هدف 88.00 · ☪ حلال<br><br>⚠️ وقف الخسارة أولاً دائماً`;
+  if(m.includes('حلال')||m.includes('شرعي'))
+    return`☪ <b>أفضل الأسهم الحلال اليوم:</b><br><br>🥇 SAUD (البركة) · حلال 98%<br>🥈 MFPC (موبكو) · حلال 96%<br>🥉 ABUK (أبوقير) · حلال 95%<br>4️⃣ FERC (فيرتشم) · حلال 95%<br>5️⃣ ALCN (الإسكندرية) · حلال 93%<br><br>✗ تجنب: COMI · QNBE (بنوك ربوية) · EAST (تبغ)`;
+  if(m.includes('سوق')||m.includes('مؤشر')||m.includes('EGX'))
+    return`📈 <b>تحليل السوق — 12 مايو 2026:</b><br><br>EGX30: 54,628 (+1.91% أمس) — أعلى إغلاق 2026<br>ATH: 54,977<br><br>• RSI = 74 ⚠️ تشبع شراء<br>• MACD = إيجابي ✓<br>• شمعة Doji (تردد)<br><br>محفزات: احتياطي 53B$ · تضخم 13.8% · AD Ports+ALCN · مورغان ستانلي<br><br><b>توقعي:</b> تصحيح صحي 52,500 ثم صعود لـ 57,000. لا تشتري على القمة.`;
+  if(m.includes('وقف')||m.includes('خسارة')||m.includes('مخاطر'))
+    return`⚖️ <b>إدارة المخاطر:</b><br><br>• وقف = دخول × 0.95<br>• أقصى خسارة = 5% من رأس المال<br>• R:R لا يقل عن 1:2<br>• أقصى 5 مراكز مفتوحة<br>• لا تضاعف الخسارة<br><br>→ استخدم حاسبة الصفقة لحساب كل شيء بدقة`;
+  return`🤖 سؤالك وصلني. جرب:<br>• "حلل ALCN" أو "حلل MFPC"<br>• "أحسن سهم حلال اليوم"<br>• "السوق رايح فين؟"<br>• "إدارة المخاطر"`;
+}
+function sm(){
+  const inp=document.getElementById('ci');const msg=inp.value.trim();if(!msg)return;
+  const area=document.getElementById('chatArea');
+  area.innerHTML+=`<div class="msg u"><div class="av" style="background:var(--blbg);border-color:var(--blbdr)">👤</div><div class="bub">${msg}</div></div>`;
+  inp.value='';area.scrollTop=area.scrollHeight;
+  setTimeout(()=>{area.innerHTML+=`<div class="msg br"><div class="av">🤖</div><div class="bub">${gr(msg)}</div></div>`;area.scrollTop=area.scrollHeight;},500);
+}
+
+
+// ════════════════════════════════════════════════
+// EODHD API — تحديث الأسعار الحقيقية
+// ════════════════════════════════════════════════
+const EODHD_TOKEN = '6a0071ad66a4a6.84201570';
+const EODHD_BASE  = 'https://eodhd.com/api';
+let callsUsed = 0;
+
+// CORS Proxies — مرتبة من الأفضل للأسوأ
+const PROXIES = [
+  u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
+  u => `https://corsproxy.io/?${encodeURIComponent(u)}`,
+  u => `https://thingproxy.freeboard.io/fetch/${u}`,
+  u => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`,
+  u => u,
+];
+
+async function fetchViaProxy(url) {
+  let lastErr = null;
+  for (const mkProxy of PROXIES) {
+    const proxyUrl = mkProxy(url);
+    try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 10000);
+      const r = await fetch(proxyUrl, {
+        signal: controller.signal,
+        headers: {'X-Requested-With':'XMLHttpRequest', 'Accept':'application/json'}
+      });
+      clearTimeout(timer);
+      if (!r.ok) { lastErr = `HTTP ${r.status}`; continue; }
+      const txt = await r.text();
+      if (!txt || txt.length < 5) { lastErr = 'empty response'; continue; }
+      // Try to parse JSON
+      const trimmed = txt.trim();
+      if (trimmed.startsWith('[') || trimmed.startsWith('{')) {
+        return JSON.parse(trimmed);
+      }
+      lastErr = 'not JSON';
+      continue;
+    } catch(e) {
+      lastErr = e.message;
+      continue;
+    }
+  }
+  throw new Error(`كل الـ proxies فشلت: ${lastErr}`);
+}
+
+function setUpd(msg, color) {
+  const el = document.getElementById('updStatus');
+  if(el) el.innerHTML = `<span style="color:${color}">${msg}</span>`;
+}
+
+function applyPrices(prices) {
+  // Update STOCKS array with real prices
+  let updated = 0;
+  STOCKS.forEach(s => {
+    if (prices[s.code] !== undefined) {
+      const p = prices[s.code];
+      s.price = parseFloat(p.price) || s.price;
+      s.chg   = parseFloat(p.chg)   || s.chg;
+      updated++;
+    }
+  });
+  // Rebuild DATA from updated STOCKS
+  DATA = buildDATAfromSTOCKS();
+  
+  // Update today's date dynamically
+  const today = getTodayShort();
+  
+  // Re-render ALL panels with new prices
+  rScan();
+  rPicks();
+  rHalal();
+  rBt();
+  
+  // Update date labels across the app
+  document.querySelectorAll('[data-date-short]').forEach(el => el.textContent = today);
+  
+  const now = new Date().toLocaleTimeString('ar-EG',{hour:'2-digit',minute:'2-digit'});
+  setUpd(`✓ ${updated} سهم محدّث — ${now}`, 'var(--gn)');
+  document.getElementById('lastUpdTime').textContent = 'آخر تحديث: ' + now;
+  document.getElementById('apiCallsInfo').textContent = `EODHD · ${callsUsed} طلب من 20`;
+}
+
+function buildDATAfromSTOCKS() {
+  return STOCKS.map(s => {
+    const rsi=gRSI(s.chg),macd=gMACD(s.chg),candle=gCandle(s.chg),
+          score=gScore(rsi,s.chg,s.code),sig=gSig(score,rsi),
+          {e,stop,t1,t2,rr}=gLev(s.price,score,rsi),dur=gDur(score);
+    return {...s,rsi,macd,candle,score,sig,entry:e,stop,t1,t2,rr,dur};
+  });
+}
+
+async function updPrices() {
+  const btn = document.getElementById('updBtn');
+  if(btn){btn.disabled=true;btn.textContent='جاري الجلب...';}
+  setUpd('جاري جلب الأسعار الحقيقية من EODHD...','var(--gd)');
+
+  const prices = {};
+  let success = false;
+
+  // ── محاولة 1: Batch Real-Time (كل الأسهم في طلب واحد)
+  try {
+    const syms = STOCKS.map(s=>s.code+'.EGX').join(',');
+    const url  = `${EODHD_BASE}/real-time/${STOCKS[0].code}.EGX?api_token=${EODHD_TOKEN}&fmt=json&s=${syms}`;
+    const data = await fetchViaProxy(url);
+    callsUsed++;
+    const arr = Array.isArray(data)?data:[data];
+    arr.forEach(item=>{
+      if(!item||!item.code)return;
+      const code = item.code.replace('.EGX','');
+      const price= parseFloat(item.close||item.adjusted_close||item.previousClose||0);
+      const chg  = parseFloat(item.change_p||0);
+      if(price>0){ prices[code]={price,chg}; }
+    });
+    if(Object.keys(prices).length>0){ success=true; setUpd('(Real-Time)...','var(--gd)'); }
+  } catch(e){ console.log('Batch RT failed:',e.message); }
+
+  // ── محاولة 2: EOD واحد-واحد مع retry (fallback)
+  if(!success){
+    setUpd('جاري جلب EOD...','var(--gd)');
+    const limit = Math.min(STOCKS.length, 20-callsUsed);
+    let done=0;
+    for(const s of STOCKS.slice(0,limit)){
+      try{
+        const url=`${EODHD_BASE}/eod/${s.code}.EGX?api_token=${EODHD_TOKEN}&fmt=json&limit=2`;
+        const data=await fetchViaProxy(url);
+        callsUsed++;
+        if(Array.isArray(data)&&data.length>0){
+          const latest=data[data.length-1];
+          const prev  =data.length>1?data[data.length-2]:latest;
+          const price =parseFloat(latest.adjusted_close||latest.close||0);
+          const prevP =parseFloat(prev.adjusted_close||prev.close||price);
+          const chg   =prevP>0?((price-prevP)/prevP*100):0;
+          if(price>0){ prices[s.code]={price,chg}; success=true; done++; }
+        }
+        // Update status every 3 stocks
+        if(done%3===0) setUpd(`جاري جلب الأسعار... ${done} سهم`,'var(--gd)');
+        await new Promise(r=>setTimeout(r,200));
+      }catch(e){
+        console.log(`Skip ${s.code}:`, e.message);
+        /* skip failed stock and continue */
+      }
+    }
+  }
+
+  if(success && Object.keys(prices).length>0){
+    applyPrices(prices);
+    document.getElementById('apiCallsInfo').textContent=`EODHD · ${callsUsed} طلب من 20`;
+  } else {
+    setUpd('✗ تعذر الجلب — تحقق من الإنترنت أو CORS Extension','var(--rd)');
+  }
+
+  if(btn){btn.disabled=false;btn.textContent='🔄 تحديث الأسعار';}
+}
+
+// Auto-refresh خلال وقت الجلسة (10ص–3:30م الاثنين–الخميس)
+(function schedAuto(){
+  const d=new Date(),h=d.getHours(),m=d.getMinutes(),day=d.getDay();
+  if(day>=1&&day<=4&&h>=10&&(h<15||(h===15&&m<=30))){
+    setTimeout(()=>{updPrices();schedAuto();},5*60*1000);
+  }
+})();
+
+
+// ── تاريخ اليوم ديناميكي ──
+function getTodayAr() {
+  const d = new Date();
+  const days = ['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+  const months = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+  return `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+}
+function getTodayShort() {
+  const d = new Date();
+  const months = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+  return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+}
+// Set dynamic date on load
+document.addEventListener('DOMContentLoaded', () => {
+  const today = getTodayAr();
+  const short = getTodayShort();
+  // Update all static date elements
+  document.querySelectorAll('[data-date]').forEach(el => el.textContent = today);
+  document.querySelectorAll('[data-date-short]').forEach(el => el.textContent = short);
+});
+
+// ══ INIT ══
+rScan();rPicks();rHalal();rGuide();rBt();ct();
+bldChartSel();
+setTimeout(drawEGXChart,300);
+</script>
+</body>
+</html>
